@@ -2,7 +2,11 @@
 // ElevenLabs accounts can't use library voices via API — set ELEVENLABS_VOICE_ID
 // in .env.local to a voice the account owns (Default Voices or a cloned one).
 const FALLBACK_VOICE = "21m00Tcm4TlvDq8ikWAM";
-const VOICES: Record<string, string> = {};
+const VOICES: Record<string, string> = {
+  en: "dkgmw0OA1OcdgloYE1O0",
+  es: "MbMvLOFbicjtQwgx0j2r",
+  fr: "kwhMCf63M8O3rCfnQ3oQ",
+};
 
 function languageToCode(language: unknown): string {
   if (typeof language !== "string") return "en";

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ClaraLogo } from '@/components/ClaraLogo';
 import { Icon } from '@/components/Icon';
 import { useClaraTweaks } from '@/lib/tweaks';
+import { langCodeToName } from '@/lib/lang';
 
 export default function SetupPage() {
   const [, setTweak] = useClaraTweaks();
@@ -12,11 +13,43 @@ export default function SetupPage() {
   const [name, setName] = useState('');
   const [language, setLanguage] = useState('en');
   const [email, setEmail] = useState('');
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTweak('language', language);
-    router.push('/upload');
+    if (pending) return;
+    setPending(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name || undefined,
+          preferred_language: langCodeToName(language),
+          caregiver_email: email || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error(`Setup failed (${res.status})`);
+      const user = await res.json();
+      const userId = user.id ?? user.user_id;
+      if (!userId) throw new Error('Setup failed: no user id returned');
+      localStorage.setItem('clara_user_id', userId);
+      // Write tweaks directly: setTweak's persist effect doesn't run before
+      // router.push unmounts the setup page.
+      try {
+        const raw = localStorage.getItem('clara-tweaks-v1');
+        const stored = raw ? JSON.parse(raw) : {};
+        stored.language = language;
+        localStorage.setItem('clara-tweaks-v1', JSON.stringify(stored));
+      } catch {}
+      setTweak('language', language);
+      router.push('/upload');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Setup failed');
+      setPending(false);
+    }
   };
 
   return (
@@ -71,9 +104,10 @@ export default function SetupPage() {
             <span className="field-hint">We&rsquo;ll send them a heads up when something important comes in. Nothing else.</span>
           </div>
 
-          <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: 8, width: 'fit-content' }}>
-            Get started <Icon name="arrow" size={18} />
+          <button type="submit" className="btn btn-primary btn-lg" disabled={pending} style={{ marginTop: 8, width: 'fit-content', opacity: pending ? 0.6 : 1 }}>
+            {pending ? 'Setting up…' : 'Get started'} <Icon name="arrow" size={18} />
           </button>
+          {error && <p style={{ margin: '4px 0 0', fontSize: 14, color: '#B5634A' }}>{error}</p>}
           <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--ink-faint)' }}>No password needed. We&rsquo;ll keep things simple.</p>
         </form>
       </div>

@@ -1,32 +1,122 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { TopNav } from '@/components/TopNav';
 import { Icon } from '@/components/Icon';
 import { AudioPlayer } from '@/components/AudioPlayer';
-import { DeadlineCard } from '@/components/DeadlineCard';
-import { CLARA_LETTERS, UI_STRINGS, formatDate } from '@/lib/content';
+import { UI_STRINGS, formatDate, daysUntil } from '@/lib/content';
 import { useClaraTweaks } from '@/lib/tweaks';
+import { langCodeToName, langCodeToBCP47 } from '@/lib/lang';
+import type { Letter as DBLetter, Deadline, CategoryRecord, UniversalExtraction } from '@/types';
+
+type LetterResponse = DBLetter & {
+  deadlines: Deadline[];
+  category_record: CategoryRecord | null;
+};
 
 export default function LetterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [t] = useClaraTweaks();
   const [draftOpen, setDraftOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [letter, setLetter] = useState<LetterResponse | null>(null);
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const lang = t.language;
   const ui = UI_STRINGS[lang] || UI_STRINGS.en;
-  const letter = CLARA_LETTERS.find(l => l.id === id) || CLARA_LETTERS[0];
+
+  // Parse the universal extraction blob once.
+  const extraction = useMemo<UniversalExtraction | null>(() => {
+    if (!letter?.full_extraction) return null;
+    try {
+      return JSON.parse(letter.full_extraction) as UniversalExtraction;
+    } catch {
+      return null;
+    }
+  }, [letter]);
+
+  // Fetch the letter.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/letters/${id}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`Letter not found (${r.status})`);
+        return r.json();
+      })
+      .then((data: LetterResponse) => { if (!cancelled) setLetter(data); })
+      .catch(err => { if (!cancelled) setLoadError(err.message); });
+    return () => { cancelled = true; };
+  }, [id]);
+
+  // Once the letter is loaded, request TTS for the spoken summary.
+  useEffect(() => {
+    if (!letter?.summary_spoken) return;
+    let cancelled = false;
+    let url: string | null = null;
+    fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: letter.summary_spoken,
+        language: langCodeToName(lang),
+      }),
+    })
+      .then(async r => {
+        if (!r.ok) throw new Error('tts unavailable');
+        return r.blob();
+      })
+      .then(blob => {
+        if (cancelled) return;
+        url = URL.createObjectURL(blob);
+        setAudioSrc(url);
+      })
+      .catch(() => { /* AudioPlayer falls back to speechSynthesis */ });
+    return () => {
+      cancelled = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [letter, lang]);
 
   const onCopy = () => {
-    navigator.clipboard?.writeText(letter.draft || '');
+    if (!extraction?.draft_response?.body) return;
+    navigator.clipboard?.writeText(extraction.draft_response.body);
     setCopied(true);
     setTimeout(() => setCopied(false), 2200);
   };
 
-  const summaryText = letter.summary[lang] || letter.summary.en;
-  const actions = letter.actions[lang] || letter.actions.en;
-  const reassureText = letter.reassure[lang] || letter.reassure.en;
+  if (loadError) {
+    return (
+      <>
+        <TopNav active="home" lang={lang} />
+        <main className="shell">
+          <p style={{ color: '#B5634A' }}>{loadError}</p>
+          <Link href="/upload" className="letter-back">
+            <Icon name="arrow-l" size={18} /> {lang === 'fr' ? 'Retour' : lang === 'ur' ? 'واپس' : 'Back'}
+          </Link>
+        </main>
+      </>
+    );
+  }
+
+  if (!letter || !extraction) {
+    return (
+      <>
+        <TopNav active="home" lang={lang} />
+        <main className="shell" style={{ paddingTop: 80 }}>
+          <p style={{ color: 'var(--ink-faint)', fontFamily: 'var(--font-display)', fontSize: 22 }}>
+            {lang === 'fr' ? 'Chargement…' : lang === 'ur' ? 'لوڈ ہو رہا ہے…' : 'Loading…'}
+          </p>
+        </main>
+      </>
+    );
+  }
+
+  const summaryText = letter.summary_spoken ?? '';
+  const actions = extraction.what_you_need_to_do ?? [];
+  const reassureText = extraction.reassurance ?? '';
+  const draft = extraction.draft_response?.needed ? extraction.draft_response.body : null;
+  const urgency = (letter.urgency ?? 'low') as 'low' | 'med' | 'high';
 
   const summaryEl = (
     <section className="letter-section fade-up fade-up-2">
@@ -36,11 +126,17 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
 
   const playerEl = (
     <section className="fade-up fade-up-1">
-      <AudioPlayer summary={summaryText} lang={lang} style={t.player} />
+      <AudioPlayer
+        src={audioSrc}
+        fallbackText={summaryText}
+        fallbackLang={langCodeToBCP47(lang)}
+        lang={lang}
+        style={t.player}
+      />
     </section>
   );
 
-  const actionsEl = actions.length > 1 || actions[0].length > 30 ? (
+  const actionsEl = actions.length > 1 || (actions[0]?.length ?? 0) > 30 ? (
     <section className="letter-section fade-up fade-up-3">
       <div className="h-mono">{ui.needToDo}</div>
       <ol className="action-list">
@@ -49,14 +145,31 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
     </section>
   ) : null;
 
-  const deadlineEl = letter.deadline ? (
+  const deadlinesEl = letter.deadlines.length > 0 ? (
     <section className="letter-section fade-up fade-up-3">
       <div className="h-mono">{ui.deadlines}</div>
-      <DeadlineCard letter={letter} lang={lang} />
+      {letter.deadlines.map(d => {
+        const days = daysUntil(d.due_date);
+        return (
+          <div key={d.id} className="deadline-card" data-level={urgency} style={{ marginBottom: 12 }}>
+            <div className="dl-date-block">
+              <div className="dl-month h-mono">
+                {d.due_date ? new Date(d.due_date).toLocaleDateString('en-US', { month: 'short' }) : ''}
+              </div>
+              <div className="dl-day">{d.due_date ? new Date(d.due_date).getDate() : ''}</div>
+            </div>
+            <div className="dl-body">
+              <div className="dl-count">{days !== null ? ui.inDays(days) : ''}</div>
+              <div className="dl-note">{d.what ?? ''}{d.consequence ? ` — ${d.consequence}` : ''}</div>
+            </div>
+            <span className="urg" data-level={urgency}><span className="urg-dot" /></span>
+          </div>
+        );
+      })}
     </section>
   ) : null;
 
-  const draftEl = letter.draft ? (
+  const draftEl = draft ? (
     <section className="letter-section fade-up fade-up-4">
       <div className="draft-block">
         <button className="draft-head" onClick={() => setDraftOpen(o => !o)}>
@@ -65,7 +178,7 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
         </button>
         {draftOpen && (
           <div className="draft-body">
-            <div className="draft-letter">{letter.draft}</div>
+            <div className="draft-letter">{draft}</div>
             <div className="draft-actions">
               <span className="draft-hint">{ui.draftHint}</span>
               <button className="btn btn-primary" onClick={onCopy}>
@@ -90,18 +203,18 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
         <header className="letter-header fade-up">
           <div>
             <div className="h-mono">{ui.from} · {letter.sender}</div>
-            <h1>{letter.type}</h1>
+            <h1>{letter.letter_type}</h1>
           </div>
           <div className="letter-meta">
-            <span className="urg" data-level={letter.urgency}>
+            <span className="urg" data-level={urgency}>
               <span className="urg-dot" />
-              {letter.urgency === 'high'
+              {urgency === 'high'
                 ? (lang === 'fr' ? 'Action requise' : lang === 'ur' ? 'فوری توجہ' : 'Action needed')
-                : letter.urgency === 'med'
+                : urgency === 'med'
                 ? (lang === 'fr' ? 'Bientôt' : lang === 'ur' ? 'جلد' : 'Soon')
                 : (lang === 'fr' ? 'Pour info' : lang === 'ur' ? 'صرف اطلاع' : 'Just FYI')}
             </span>
-            <span className="muted">{ui.received} {formatDate(letter.received, lang)}</span>
+            <span className="muted">{ui.received} {formatDate(letter.created_at, lang)}</span>
           </div>
         </header>
 
@@ -113,7 +226,7 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
               {actionsEl}
             </div>
             <div className="col-r">
-              {deadlineEl}
+              {deadlinesEl}
               {draftEl}
             </div>
           </div>
@@ -122,15 +235,17 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
             {playerEl}
             {summaryEl}
             {actionsEl}
-            {deadlineEl}
+            {deadlinesEl}
             {draftEl}
           </div>
         )}
 
-        <div className="reassure fade-up fade-up-4">
-          <div className="h-mono">{ui.reassure}</div>
-          <p>&ldquo;{reassureText}&rdquo;</p>
-        </div>
+        {reassureText && (
+          <div className="reassure fade-up fade-up-4">
+            <div className="h-mono">{ui.reassure}</div>
+            <p>&ldquo;{reassureText}&rdquo;</p>
+          </div>
+        )}
       </main>
     </>
   );

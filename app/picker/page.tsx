@@ -19,6 +19,13 @@ export default function PickerPage() {
     l === 'fr' ? '🇫🇷' : l === 'ur' ? 'اُر' : l === 'es' ? '🇪🇸' : 'EN';
 
   const onPick = (p: Profile) => {
+    // Write directly first — router.push can outpace the persist useEffect.
+    try {
+      const raw = localStorage.getItem('clara-tweaks-v1');
+      const stored = raw ? JSON.parse(raw) : {};
+      Object.assign(stored, { activeProfile: p.id, language: p.language, accent: p.accent });
+      localStorage.setItem('clara-tweaks-v1', JSON.stringify(stored));
+    } catch {}
     setTweak({ activeProfile: p.id, language: p.language, accent: p.accent });
     setTimeout(() => router.push('/upload'), 200);
   };
