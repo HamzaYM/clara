@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 
 const REPO_ROOT = path.resolve(import.meta.dirname, "..");
 const LETTERS_DIR = path.join(REPO_ROOT, "sample-letters");
-const SEED_PATH = path.join(REPO_ROOT, "sample-data", "seed.ts");
+const SEED_PATH = path.join(REPO_ROOT, "sample-data", "seed.mts");
 
 const LETTERS = [
   "medicaid-renewal.png",

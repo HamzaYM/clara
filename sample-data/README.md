@@ -30,7 +30,7 @@ npm run dev
 In another, from the repo root:
 
 ```bash
-npx tsx sample-data/seed.ts
+npx tsx sample-data/seed.mts
 ```
 
 The script:
@@ -40,7 +40,7 @@ The script:
 3. Logs per-letter progress; continues on errors.
 4. Prints the final `user_id` and success count.
 
-Override the dev URL with `CLARA_BASE_URL=http://… npx tsx sample-data/seed.ts`.
+Override the dev URL with `CLARA_BASE_URL=http://… npx tsx sample-data/seed.mts`.
 
 ## Requires
 

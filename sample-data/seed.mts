@@ -28,12 +28,16 @@ function postJSON(url: string, body: unknown): Promise<Response> {
   });
 }
 
+async function describeFail(res: Response): Promise<string> {
+  const body = (await res.text()).replace(/\s+/g, " ").trim();
+  const snippet = body.length > 160 ? body.slice(0, 160) + "…" : body;
+  return `${res.status} ${res.statusText}${snippet ? ` — ${snippet}` : ""}`;
+}
+
 async function main() {
   const userRes = await postJSON(`${BASE_URL}/api/users`, ELENA);
   if (!userRes.ok) {
-    throw new Error(
-      `POST /api/users failed: ${userRes.status} ${await userRes.text()}`,
-    );
+    throw new Error(`POST /api/users failed: ${await describeFail(userRes)}`);
   }
   const { user_id } = (await userRes.json()) as { user_id: string };
 
@@ -52,7 +56,7 @@ async function main() {
       });
 
       if (!res.ok) {
-        console.log(`failed: ${res.status} ${await res.text()}`);
+        console.log(`failed: ${await describeFail(res)}`);
         continue;
       }
       console.log("done");
