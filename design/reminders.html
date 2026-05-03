@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clara — Reminders</title>
+<link rel="stylesheet" href="clara.css" />
+<link rel="stylesheet" href="clara-pages.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="options-panel.jsx"></script>
+<script type="text/babel" src="clara-tweaks.jsx"></script>
+<script type="text/babel" src="clara-content.jsx"></script>
+<script type="text/babel" src="clara-components.jsx"></script>
+<script type="text/babel">
+function RemindersApp() {
+  const [t, setTweak] = useClaraTweaks();
+  const lang = t.language;
+  const ui = UI_STRINGS[lang];
+
+  const upcoming = CLARA_LETTERS
+    .filter(l => l.deadline)
+    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+  const monthName = (d) => new Date(d).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { month: 'short' }).toUpperCase();
+
+  return (
+    <>
+      <TopNav active="reminders" lang={lang} />
+      <main className="shell" data-screen-label="05 Reminders">
+        <section className="profile-hero fade-up">
+          <div className="h-mono" style={{marginBottom:12}}>{ui.upcoming}</div>
+          <h1 className="h-display">{lang === 'fr' ? 'Rappels' : lang === 'ur' ? 'یاد دہانیاں' : 'Reminders'}</h1>
+          <p>{lang === 'fr' ? "Trois choses à venir. Pas de panique — nous vous guiderons à chaque étape." : lang === 'ur' ? "تین چیزیں آنے والی ہیں۔ گھبرائیں نہیں — ہم ہر قدم پر ساتھ ہیں۔" : "Three things coming up. Take them one at a time — we'll walk through each."}</p>
+        </section>
+
+        {upcoming.length === 0 ? (
+          <div className="empty-state fade-up">
+            <span className="leaf"><Icon name="leaf" size={26} stroke={1.4} /></span>
+            <h2>{ui.noUrgent}</h2>
+            <p>{lang === 'fr' ? "Profitez de votre journée." : lang === 'ur' ? "آج کا دن خوشی سے گزاریں۔" : "Enjoy your day."}</p>
+          </div>
+        ) : (
+          <section className="reminders-list fade-up fade-up-2" style={{marginTop:32}}>
+            {upcoming.map(l => {
+              const days = daysUntil(l.deadline);
+              return (
+                <a key={l.id} className="reminder-row" href={`letter.html?id=${l.id}`}>
+                  <div className="reminder-date">
+                    <div className="day">{new Date(l.deadline).getDate()}</div>
+                    <div className="when">{monthName(l.deadline)} · {ui.inDays(days)}</div>
+                  </div>
+                  <div className="reminder-body">
+                    <h3>{l.type}</h3>
+                    <span className="src">{ui.from} {l.sender}</span>
+                    <span className="urg" data-level={l.urgency} style={{marginTop:6}}>
+                      <span className="urg-dot" />
+                      {l.urgency === 'high' ? (lang === 'fr' ? 'Action requise' : lang === 'ur' ? 'فوری' : 'Action needed')
+                        : l.urgency === 'med' ? (lang === 'fr' ? 'Bientôt' : lang === 'ur' ? 'جلد' : 'Soon')
+                        : (lang === 'fr' ? 'Pour info' : lang === 'ur' ? 'اطلاع' : 'FYI')}
+                    </span>
+                  </div>
+                  <div className="reminder-action">
+                    <span style={{fontSize:15}}>{lang === 'fr' ? 'Voir la réponse' : lang === 'ur' ? 'جواب دیکھیں' : 'See draft reply'}</span>
+                    <Icon name="arrow" size={18} />
+                  </div>
+                </a>
+              );
+            })}
+          </section>
+        )}
+      </main>
+
+      <ClaraTweaksPanel tweaks={t} setTweak={setTweak} />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<RemindersApp />);
+</script>
+</body>
+</html>

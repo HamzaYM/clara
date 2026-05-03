@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clara — Letter</title>
+<link rel="stylesheet" href="clara.css" />
+<link rel="stylesheet" href="clara-pages.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="options-panel.jsx"></script>
+<script type="text/babel" src="clara-tweaks.jsx"></script>
+<script type="text/babel" src="clara-content.jsx"></script>
+<script type="text/babel" src="clara-components.jsx"></script>
+<script type="text/babel">
+function getLetterId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id') || 'masshealth-renewal';
+}
+
+function LetterApp() {
+  const [t, setTweak] = useClaraTweaks();
+  const [draftOpen, setDraftOpen] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
+  const lang = t.language;
+  const ui = UI_STRINGS[lang];
+  const letterId = getLetterId();
+  const letter = CLARA_LETTERS.find(l => l.id === letterId) || CLARA_LETTERS[0];
+
+  const onCopy = () => {
+    navigator.clipboard?.writeText(letter.draft || '');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2200);
+  };
+
+  const summaryEl = (
+    <section className="letter-section fade-up fade-up-2">
+      <p className="letter-summary">{letter.summary[lang]}</p>
+    </section>
+  );
+
+  const playerEl = (
+    <section className="fade-up fade-up-1">
+      <AudioPlayer summary={letter.summary[lang]} lang={lang} style={t.player} />
+    </section>
+  );
+
+  const actionsEl = letter.actions[lang].length > 1 || letter.actions[lang][0].length > 30 ? (
+    <section className="letter-section fade-up fade-up-3">
+      <div className="h-mono">{ui.needToDo}</div>
+      <ol className="action-list">
+        {letter.actions[lang].map((a, i) => <li key={i}>{a}</li>)}
+      </ol>
+    </section>
+  ) : null;
+
+  const deadlineEl = letter.deadline ? (
+    <section className="letter-section fade-up fade-up-3">
+      <div className="h-mono">{ui.deadlines}</div>
+      <DeadlineCard letter={letter} lang={lang} />
+    </section>
+  ) : null;
+
+  const draftEl = letter.draft ? (
+    <section className="letter-section fade-up fade-up-4">
+      <div className="draft-block">
+        <button className="draft-head" onClick={() => setDraftOpen(o => !o)}>
+          <h3>{ui.draft}</h3>
+          <Icon name={draftOpen ? 'chevron-d' : 'chevron-r'} size={20} />
+        </button>
+        {draftOpen && (
+          <div className="draft-body">
+            <div className="draft-letter">{letter.draft}</div>
+            <div className="draft-actions">
+              <span className="draft-hint">{ui.draftHint}</span>
+              <button className="btn btn-primary" onClick={onCopy}>
+                <Icon name={copied ? 'check' : 'copy'} size={18} />
+                {copied ? ui.copied : ui.copy}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  ) : null;
+
+  return (
+    <>
+      <TopNav active="home" lang={lang} />
+      <main className="letter-page-shell" data-screen-label="03 Letter">
+        <a href="upload.html" className="letter-back"><Icon name="arrow-l" size={18} /> {lang === 'fr' ? 'Retour' : lang === 'ur' ? 'واپس' : 'Back'}</a>
+
+        <header className="letter-header fade-up">
+          <div>
+            <div className="h-mono">{ui.from} · {letter.sender}</div>
+            <h1>{letter.type}</h1>
+          </div>
+          <div className="letter-meta">
+            <span className="urg" data-level={letter.urgency}>
+              <span className="urg-dot" />
+              {letter.urgency === 'high' ? (lang === 'fr' ? 'Action requise' : lang === 'ur' ? 'فوری توجہ' : 'Action needed')
+                : letter.urgency === 'med' ? (lang === 'fr' ? 'Bientôt' : lang === 'ur' ? 'جلد' : 'Soon')
+                : (lang === 'fr' ? 'Pour info' : lang === 'ur' ? 'صرف اطلاع' : 'Just FYI')}
+            </span>
+            <span className="muted">{ui.received} {formatDate(letter.received, lang)}</span>
+          </div>
+        </header>
+
+        {t.layout === 'split' ? (
+          <div className="letter-grid">
+            <div className="col-l">
+              {playerEl}
+              {summaryEl}
+              {actionsEl}
+            </div>
+            <div className="col-r">
+              {deadlineEl}
+              {draftEl}
+            </div>
+          </div>
+        ) : t.layout === 'story' ? (
+          <div className="letter-grid">
+            {playerEl}
+            {summaryEl}
+            {actionsEl}
+            {deadlineEl}
+            {draftEl}
+          </div>
+        ) : (
+          <div className="letter-grid">
+            {playerEl}
+            {summaryEl}
+            {actionsEl}
+            {deadlineEl}
+            {draftEl}
+          </div>
+        )}
+
+        <div className="reassure fade-up fade-up-4">
+          <div className="h-mono">{ui.reassure}</div>
+          <p>"{letter.reassure[lang]}"</p>
+        </div>
+      </main>
+
+      <ClaraTweaksPanel tweaks={t} setTweak={setTweak} />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<LetterApp />);
+</script>
+</body>
+</html>

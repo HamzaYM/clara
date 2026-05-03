@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clara — Overview</title>
+<link rel="stylesheet" href="clara.css" />
+<link rel="stylesheet" href="clara-pages.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  .page-thumb {
+    transform: scale(0.34);
+    transform-origin: top left;
+    width: 294%;
+    height: 294%;
+    pointer-events: none;
+    background: var(--bg);
+    padding: 18px 22px;
+    color: var(--ink);
+    font-family: var(--font-body);
+  }
+  .thumb-h1 { font-family: var(--font-display); font-size: 42px; font-weight: 500; letter-spacing: -0.015em; margin: 12px 0 16px; line-height: 1.05; }
+  .thumb-h1 em { color: var(--accent-ink); font-style: italic; }
+  .thumb-mono { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+  .thumb-row { display: flex; gap: 8px; align-items: center; padding: 10px 12px; background: var(--bg-elev); border-radius: 10px; margin-bottom: 8px; border: 0.5px solid var(--rule); }
+  .thumb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--urgency-high); flex-shrink: 0; }
+  .thumb-stack { display: flex; flex-direction: column; gap: 2px; flex:1; min-width: 0; }
+  .thumb-bar { height: 6px; background: var(--accent-soft); border-radius: 4px; }
+  .thumb-bar-fill { height: 100%; background: var(--accent); border-radius: inherit; }
+  .thumb-pill { display:inline-block; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: 11px; font-weight: 500; letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="options-panel.jsx"></script>
+<script type="text/babel" src="clara-tweaks.jsx"></script>
+<script type="text/babel" src="clara-content.jsx"></script>
+<script type="text/babel" src="clara-components.jsx"></script>
+<script type="text/babel">
+function Thumb({ children }) {
+  return <div className="canvas-thumb"><div className="page-thumb">{children}</div></div>;
+}
+
+function CanvasApp() {
+  const [t, setTweak] = useClaraTweaks();
+
+  const pages = [
+    {
+      href: 'picker.html',
+      idx: '00',
+      title: 'Profile picker',
+      blurb: "Caregivers managing several people pick whose mail they're looking at today.",
+      thumb: (
+        <Thumb>
+          <div style={{textAlign:'center', marginTop:8}}>
+            <span className="wordmark" style={{fontSize:22}}>Clara</span>
+            <div className="thumb-h1" style={{fontSize:32, marginTop:14}}>Welcome <em>back.</em></div>
+            <div style={{fontSize:14, color:'var(--ink-soft)', marginBottom:16}}>Whose mail are we looking at today?</div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10}}>
+              {[{i:'E',c:'#DDE3D5',k:'#4A5A40',n:'Elena',r:'Mom'},{i:'A',c:'#E5DBC9',k:'#5C4625',n:'Amir',r:'Dad'},{i:'M',c:'#F1DDD0',k:'#7E4528',n:'Marie',r:'Auntie'},{i:'+',c:'transparent',k:'var(--ink-faint)',n:'Add',r:'New'}].map((p,i)=>(
+                <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+                  <div style={{width:64,height:64,borderRadius:'50%',background:p.c,color:p.k,border:p.c==='transparent'?'1.5px dashed var(--rule-strong)':'0.5px solid var(--rule)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-display)',fontSize:28,fontWeight:500}}>{p.i}</div>
+                  <div style={{fontFamily:'var(--font-mono)',fontSize:9,textTransform:'uppercase',color:'var(--ink-faint)'}}>{p.r}</div>
+                  <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:500}}>{p.n}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Thumb>
+      )
+    },
+    {
+      href: 'setup.html',
+      idx: '01',
+      title: 'Setup',
+      blurb: 'Friendly welcome. Caregiver picks a name, language, and optional email.',
+      thumb: (
+        <Thumb>
+          <span className="wordmark" style={{fontSize:28}}>Clara</span>
+          <div className="thumb-h1">A patient helper for the letters that <em>matter.</em></div>
+          <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:18,maxWidth:340}}>
+            <div className="thumb-mono">Your name</div>
+            <div style={{height:42, background:'var(--bg-elev)', border:'0.5px solid var(--rule-strong)', borderRadius:8}} />
+            <div className="thumb-mono" style={{marginTop:8}}>Preferred language</div>
+            <div style={{height:42, background:'var(--bg-elev)', border:'0.5px solid var(--rule-strong)', borderRadius:8}} />
+            <div style={{marginTop:14, display:'inline-block', padding:'14px 24px', background:'var(--ink)', color:'var(--bg)', borderRadius:999, width:'fit-content', fontSize:16}}>Get started →</div>
+          </div>
+        </Thumb>
+      )
+    },
+    {
+      href: 'upload.html',
+      idx: '02',
+      title: 'Upload',
+      blurb: 'Home for returning users. A big inviting area to snap a photo, plus recent letters below.',
+      thumb: (
+        <Thumb>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+            <span className="wordmark" style={{fontSize:22}}>Clara</span>
+            <div style={{display:'flex',gap:14,fontSize:12}}><span>Home</span><span style={{color:'var(--ink-faint)'}}>Letters</span><span style={{color:'var(--ink-faint)'}}>Reminders</span></div>
+          </div>
+          <div style={{textAlign:'center',marginBottom:16}}>
+            <div className="thumb-h1" style={{fontSize:34}}>Good morning, <em>Elena.</em></div>
+          </div>
+          <div style={{border:'1.5px dashed var(--rule-strong)', borderRadius:18, padding:'34px 20px', textAlign:'center', background:'var(--bg-elev)'}}>
+            <div style={{width:54,height:54,borderRadius:'50%',background:'var(--accent-soft)',margin:'0 auto 14px'}} />
+            <div style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:500}}>Take a photo of your letter</div>
+            <div style={{marginTop:14,padding:'12px 24px',background:'var(--ink)',color:'var(--bg)',borderRadius:999,fontSize:15,display:'inline-block'}}>📷 Take a photo</div>
+          </div>
+        </Thumb>
+      )
+    },
+    {
+      href: 'letter.html?id=masshealth-renewal',
+      idx: '03',
+      title: 'Letter view',
+      blurb: 'The heart. Auto-playing audio, plain-language summary, what to do, deadlines, draft reply.',
+      thumb: (
+        <Thumb>
+          <div className="thumb-mono">From · MassHealth</div>
+          <div className="thumb-h1" style={{fontSize:32}}>Medicaid Renewal Notice</div>
+          <div style={{display:'flex',gap:12,alignItems:'center',padding:14,background:'var(--bg-tint)',borderRadius:14,marginBottom:14}}>
+            <div style={{width:46,height:46,borderRadius:'50%',background:'var(--ink)',color:'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center'}}>▶</div>
+            <div style={{flex:1, display:'flex',gap:2,alignItems:'center',height:24}}>
+              {[...Array(40)].map((_,i)=><span key={i} style={{width:3,height:Math.abs(Math.sin(i*0.4)*16)+4,background:i<8?'var(--accent)':'var(--ink-soft)',opacity:i<8?1:0.3,borderRadius:2}}/>)}
+            </div>
+          </div>
+          <div style={{fontFamily:'var(--font-display)',fontSize:22,lineHeight:1.45}}>MassHealth needs to confirm you still qualify for your health insurance…</div>
+        </Thumb>
+      )
+    },
+    {
+      href: 'profile.html',
+      idx: '04',
+      title: 'My letters',
+      blurb: 'Past letters in a tidy filing cabinet — Government, Health, Financial, Other.',
+      thumb: (
+        <Thumb>
+          <div className="thumb-mono">Hello, Elena</div>
+          <div className="thumb-h1">Your letters</div>
+          <div style={{borderBottom:'0.5px solid var(--rule)', paddingBottom:6, marginBottom:10, display:'flex',justifyContent:'space-between'}}>
+            <div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:500}}>Government</div>
+            <div className="thumb-mono">2 letters</div>
+          </div>
+          <div className="thumb-row"><div className="thumb-dot" /><div className="thumb-stack"><div style={{fontSize:11,color:'var(--ink-faint)'}}>MassHealth</div><div style={{fontFamily:'var(--font-display)',fontSize:16}}>Medicaid Renewal</div></div><div style={{fontFamily:'var(--font-display)',fontSize:14}}>May 15</div></div>
+          <div className="thumb-row"><div className="thumb-dot" style={{background:'var(--urgency-med)'}}/><div className="thumb-stack"><div style={{fontSize:11,color:'var(--ink-faint)'}}>USCIS</div><div style={{fontFamily:'var(--font-display)',fontSize:16}}>Green Card Renewal</div></div><div style={{fontFamily:'var(--font-display)',fontSize:14}}>Jul 12</div></div>
+          <div style={{borderBottom:'0.5px solid var(--rule)', paddingBottom:6, margin:'14px 0 10px', display:'flex',justifyContent:'space-between'}}>
+            <div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:500}}>Health</div>
+            <div className="thumb-mono">1 letter</div>
+          </div>
+          <div className="thumb-row"><div className="thumb-dot" style={{background:'var(--urgency-med)'}}/><div className="thumb-stack"><div style={{fontSize:11,color:'var(--ink-faint)'}}>Mass General</div><div style={{fontFamily:'var(--font-display)',fontSize:16}}>Medical Bill</div></div><div style={{fontFamily:'var(--font-display)',fontSize:14}}>May 22</div></div>
+        </Thumb>
+      )
+    },
+    {
+      href: 'account.html',
+      idx: '06',
+      title: 'Account',
+      blurb: 'Voice, caregivers, language, privacy. Side panel with avatar; main column with quiet, well-spaced rows.',
+      thumb: (
+        <Thumb>
+          <div className="thumb-mono">Account</div>
+          <div className="thumb-h1" style={{fontSize:30}}>Elena Rodriguez.</div>
+          <div style={{display:'grid',gridTemplateColumns:'120px 1fr',gap:18,marginTop:10}}>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:14,background:'var(--bg-elev)',border:'0.5px solid var(--rule)',borderRadius:14}}>
+              <div style={{width:60,height:60,borderRadius:'50%',background:'var(--accent-soft)',color:'var(--accent-ink)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-display)',fontSize:28,fontWeight:500}}>E</div>
+              <div className="thumb-mono">Mom</div>
+              <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:500}}>Elena</div>
+              <span className="thumb-pill">English</span>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              <div style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'0.5px solid var(--rule)'}}><span style={{fontFamily:'var(--font-display)',fontSize:14}}>Auto-play letters</span><span style={{width:30,height:18,borderRadius:999,background:'var(--accent)'}}/></div>
+              <div style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'0.5px solid var(--rule)'}}><span style={{fontFamily:'var(--font-display)',fontSize:14}}>Reading speed</span><span style={{fontSize:11,color:'var(--ink-soft)'}}>Normal</span></div>
+              <div style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'0.5px solid var(--rule)'}}><span style={{fontFamily:'var(--font-display)',fontSize:14}}>Caregiver — Sofia</span><span style={{fontSize:11,color:'var(--ink-faint)'}}>Edit</span></div>
+              <div style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'0.5px solid var(--rule)'}}><span style={{fontFamily:'var(--font-display)',fontSize:14}}>Weekly digest</span><span style={{width:30,height:18,borderRadius:999,background:'var(--accent)'}}/></div>
+            </div>
+          </div>
+        </Thumb>
+      )
+    },
+    {
+      href: 'reminders.html',
+      idx: '05',
+      title: 'Reminders',
+      blurb: 'Upcoming deadlines, sorted. Calm — never alarming.',
+      thumb: (
+        <Thumb>
+          <div className="thumb-mono">Upcoming</div>
+          <div className="thumb-h1">Reminders</div>
+          <div style={{display:'flex',gap:18,padding:'18px 0',borderBottom:'0.5px solid var(--rule)',alignItems:'center'}}>
+            <div><div style={{fontFamily:'var(--font-display)',fontSize:42,fontWeight:500,lineHeight:1}}>15</div><div className="thumb-mono">May · in 12 days</div></div>
+            <div style={{flex:1}}><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:500}}>Medicaid Renewal Notice</div><div style={{fontSize:13,color:'var(--ink-soft)'}}>From MassHealth</div></div>
+            <div className="thumb-dot" />
+          </div>
+          <div style={{display:'flex',gap:18,padding:'18px 0',borderBottom:'0.5px solid var(--rule)',alignItems:'center'}}>
+            <div><div style={{fontFamily:'var(--font-display)',fontSize:42,fontWeight:500,lineHeight:1}}>22</div><div className="thumb-mono">May · in 19 days</div></div>
+            <div style={{flex:1}}><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:500}}>Medical Bill</div><div style={{fontSize:13,color:'var(--ink-soft)'}}>Mass General Brigham</div></div>
+            <div className="thumb-dot" style={{background:'var(--urgency-med)'}}/>
+          </div>
+          <div style={{display:'flex',gap:18,padding:'18px 0',alignItems:'center'}}>
+            <div><div style={{fontFamily:'var(--font-display)',fontSize:42,fontWeight:500,lineHeight:1}}>12</div><div className="thumb-mono">Jul · in 70 days</div></div>
+            <div style={{flex:1}}><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:500}}>Green Card Renewal</div><div style={{fontSize:13,color:'var(--ink-soft)'}}>USCIS</div></div>
+            <div className="thumb-dot" style={{background:'var(--urgency-med)'}}/>
+          </div>
+        </Thumb>
+      )
+    },
+  ];
+
+  return (
+    <main className="canvas-shell" data-screen-label="00 Overview">
+      <header className="canvas-head">
+        <div>
+          <ClaraLogo size="lg" />
+          <h1 style={{marginTop:24}}>Five screens, <em>one warm room.</em></h1>
+          <p>Clara as a clickable prototype. All five screens share state — the tweaks you make in the panel follow you across pages. Try the layout, accent, and language switches first.</p>
+        </div>
+        <div style={{textAlign:'right',color:'var(--ink-faint)',fontFamily:'var(--font-mono)',fontSize:13,letterSpacing:'0.06em',textTransform:'uppercase'}}>
+          v1 · May 2026<br/>
+          <span style={{color:'var(--accent-ink)'}}>Tap any screen to enter →</span>
+        </div>
+      </header>
+
+      <div className="canvas-grid">
+        {pages.map(p => (
+          <a key={p.href} className="canvas-card" href={p.href}>
+            {p.thumb}
+            <div className="canvas-meta">
+              <span className="h-mono">{p.idx} · Screen</span>
+              <h3>{p.title}</h3>
+              <p>{p.blurb}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <ClaraTweaksPanel tweaks={t} setTweak={setTweak} />
+    </main>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<CanvasApp />);
+</script>
+</body>
+</html>
