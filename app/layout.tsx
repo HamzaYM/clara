@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Source_Serif_4, Inter_Tight, IBM_Plex_Mono, Caveat } from "next/font/google";
+import { OptionsPanel } from "@/components/OptionsPanel";
 import "./globals.css";
 
 const sourceSerif = Source_Serif_4({
@@ -45,7 +46,10 @@ export default function RootLayout({
       data-lang="en"
       className={`${sourceSerif.variable} ${interTight.variable} ${plexMono.variable} ${caveat.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <OptionsPanel />
+      </body>
     </html>
   );
 }
