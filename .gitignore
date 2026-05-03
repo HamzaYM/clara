@@ -25,6 +25,11 @@
 *.pem
 .playwright-mcp/
 
+# clara — local sqlite + playwright artifacts
+/data/
+/test-results/
+/playwright-report/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
