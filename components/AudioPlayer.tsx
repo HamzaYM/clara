@@ -5,17 +5,13 @@ import { Icon } from './Icon';
 import { UI_STRINGS } from '@/lib/content';
 
 interface AudioPlayerProps {
-  src?: string | null;        // blob URL from /api/tts
-  fallbackText?: string;      // played via speechSynthesis if src is missing
-  fallbackLang?: string;      // BCP-47 (e.g. 'es-ES')
+  src?: string | null;        // blob URL from /api/tts (ElevenLabs)
   lang?: string;
   style?: 'ribbon' | 'big' | 'tape';
 }
 
 export function AudioPlayer({
   src,
-  fallbackText,
-  fallbackLang,
   lang = 'en',
   style = 'ribbon',
 }: AudioPlayerProps) {
@@ -61,40 +57,14 @@ export function AudioPlayer({
     };
   }, [src]);
 
-  // Stop any speech synthesis on unmount
-  useEffect(() => {
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
-
   const toggle = () => {
     const a = audioRef.current;
-    if (src && a) {
-      if (playing) {
-        a.pause();
-      } else {
-        a.play().catch(() => setPlaying(false));
-      }
-      return;
-    }
-    // Fallback to speech synthesis
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window && fallbackText) {
-      if (playing) {
-        window.speechSynthesis.cancel();
-        setPlaying(false);
-        return;
-      }
-      const utter = new SpeechSynthesisUtterance(fallbackText);
-      if (fallbackLang) utter.lang = fallbackLang;
-      utter.onend = () => setPlaying(false);
-      utter.onerror = () => setPlaying(false);
-      window.speechSynthesis.speak(utter);
-      setPlaying(true);
-    }
+    if (!src || !a) return;       // ElevenLabs only — no fallback
+    if (playing) a.pause();
+    else a.play().catch(() => setPlaying(false));
   };
+
+  const ready = !!src;
 
   const formatTime = (s: number) => {
     if (!s || !isFinite(s)) return '0:00';
@@ -113,7 +83,7 @@ export function AudioPlayer({
     return (
       <div className="player tape">
         {audioEl}
-        <button className="play-btn" onClick={toggle} aria-label={playing ? ui.pause : ui.listen}>
+        <button className="play-btn" onClick={toggle} disabled={!ready} aria-label={playing ? ui.pause : ui.listen} style={{ opacity: ready ? 1 : 0.5, cursor: ready ? 'pointer' : 'progress' }}>
           <Icon name={playing ? 'pause' : 'play'} size={26} />
         </button>
         <div className="tape-body">
@@ -145,7 +115,7 @@ export function AudioPlayer({
     return (
       <div className="player big">
         {audioEl}
-        <button className="play-btn play-btn-xl" onClick={toggle} aria-label={playing ? ui.pause : ui.listen}>
+        <button className="play-btn play-btn-xl" onClick={toggle} disabled={!ready} aria-label={playing ? ui.pause : ui.listen} style={{ opacity: ready ? 1 : 0.5, cursor: ready ? 'pointer' : 'progress' }}>
           <Icon name={playing ? 'pause' : 'play'} size={34} />
         </button>
         <div className="big-body">

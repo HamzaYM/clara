@@ -7,7 +7,7 @@ import { Icon } from '@/components/Icon';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { UI_STRINGS, formatDate, daysUntil } from '@/lib/content';
 import { useClaraTweaks } from '@/lib/tweaks';
-import { langCodeToName, langCodeToBCP47 } from '@/lib/lang';
+import { langCodeToName } from '@/lib/lang';
 import type { Letter as DBLetter, Deadline, CategoryRecord, UniversalExtraction } from '@/types';
 
 type LetterResponse = DBLetter & {
@@ -17,7 +17,7 @@ type LetterResponse = DBLetter & {
 
 export default function LetterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [t] = useClaraTweaks();
+  const [t, , hydrated] = useClaraTweaks();
   const [draftOpen, setDraftOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [letter, setLetter] = useState<LetterResponse | null>(null);
@@ -49,9 +49,12 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
     return () => { cancelled = true; };
   }, [id]);
 
-  // Once the letter is loaded, request TTS for the spoken summary.
+  // Once the letter is loaded AND tweaks are hydrated, request TTS for the
+  // spoken summary. The hydrated gate matters: without it, this effect runs
+  // once with the default 'en' language and once with the stored language,
+  // racing two ElevenLabs requests and frequently playing the wrong voice.
   useEffect(() => {
-    if (!letter?.summary_spoken) return;
+    if (!hydrated || !letter?.summary_spoken) return;
     let cancelled = false;
     let url: string | null = null;
     fetch('/api/tts', {
@@ -76,7 +79,7 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
       cancelled = true;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [letter, lang]);
+  }, [hydrated, letter, lang]);
 
   const onCopy = () => {
     if (!extraction?.draft_response?.body) return;
@@ -126,13 +129,7 @@ export default function LetterPage({ params }: { params: Promise<{ id: string }>
 
   const playerEl = (
     <section className="fade-up fade-up-1">
-      <AudioPlayer
-        src={audioSrc}
-        fallbackText={summaryText}
-        fallbackLang={langCodeToBCP47(lang)}
-        lang={lang}
-        style={t.player}
-      />
+      <AudioPlayer src={audioSrc} lang={lang} style={t.player} />
     </section>
   );
 

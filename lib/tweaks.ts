@@ -116,8 +116,13 @@ type SetTweak = {
   (edits: Partial<Tweaks>): void;
 };
 
-export function useClaraTweaks(): [Tweaks, SetTweak] {
+// Third tuple element `hydrated` becomes true once the localStorage read has
+// been applied. Effects that produce side-effects keyed on tweaks (TTS
+// requests, API calls using language) MUST gate on this — otherwise they
+// fire once with CLARA_DEFAULTS and again with the stored values.
+export function useClaraTweaks(): readonly [Tweaks, SetTweak, boolean] {
   const [t, setT] = useState<Tweaks>(CLARA_DEFAULTS);
+  const [hydrated, setHydrated] = useState(false);
 
   // Load stored tweaks once on mount (avoids SSR/hydration mismatch).
   useEffect(() => {
@@ -125,6 +130,7 @@ export function useClaraTweaks(): [Tweaks, SetTweak] {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setT(prev => ({ ...prev, ...JSON.parse(raw) }));
     } catch {}
+    setHydrated(true);
   }, []);
 
   // Persist + apply to DOM on change.
@@ -140,5 +146,5 @@ export function useClaraTweaks(): [Tweaks, SetTweak] {
     setT(prev => ({ ...prev, ...edits }));
   }) as SetTweak, []);
 
-  return useMemo(() => [t, setTweak] as [Tweaks, SetTweak], [t, setTweak]);
+  return useMemo(() => [t, setTweak, hydrated] as const, [t, setTweak, hydrated]);
 }
