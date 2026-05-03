@@ -44,21 +44,21 @@ export const CLARA_DEFAULTS: Tweaks = {
 };
 
 export interface AccentPalette { accent: string; soft: string; ink: string }
-export const ACCENT_PALETTES: Record<string, AccentPalette> = {
+export const ACCENT_PALETTES = {
   sage:       { accent: '#7A8B6F', soft: '#DDE3D5', ink: '#4A5A40' },
   terracotta: { accent: '#C97B5C', soft: '#F1DDD0', ink: '#7E4528' },
   amber:      { accent: '#B8956A', soft: '#EFE3D0', ink: '#7A5A30' },
   walnut:     { accent: '#8B6F47', soft: '#E5DBC9', ink: '#5C4625' },
-};
+} satisfies Record<string, AccentPalette>;
 
 export interface BackgroundPalette { bg: string; elev: string; tint: string }
-export const BACKGROUND_PALETTES: Record<string, BackgroundPalette> = {
+export const BACKGROUND_PALETTES = {
   cream:    { bg: '#F5EFE6', elev: '#FBF7EF', tint: '#EDE5D6' },
   ivory:    { bg: '#F8F2E4', elev: '#FDF8EC', tint: '#F0E6D0' },
   offwhite: { bg: '#F4F2ED', elev: '#FBFAF6', tint: '#ECE9E1' },
   linen:    { bg: '#EFE9DC', elev: '#F7F1E2', tint: '#E5DDC9' },
   parchment:{ bg: '#EDE3CC', elev: '#F5ECD8', tint: '#E0D4B8' },
-};
+} satisfies Record<string, BackgroundPalette>;
 
 export interface Profile {
   id: string;
