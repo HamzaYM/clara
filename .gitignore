@@ -26,6 +26,12 @@
 .DS_Store
 *.pem
 .playwright-mcp/
+.worktrees/
+
+# clara — local sqlite + playwright artifacts
+/data/
+/test-results/
+/playwright-report/
 
 # debug
 npm-debug.log*
