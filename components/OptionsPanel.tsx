@@ -493,12 +493,18 @@ export function OptionsPanel() {
       />
 
       <OptSection label="Language (demo)" />
-      <OptRadio
-        label="Show in"
+      <OptSelect
+        label="Read in"
         value={t.language}
         options={[
           { value: 'en', label: 'English' },
+          { value: 'es', label: 'Español' },
           { value: 'fr', label: 'Français' },
+          { value: 'pt', label: 'Português' },
+          { value: 'zh', label: '中文 (Mandarin)' },
+          { value: 'ht', label: 'Kreyòl ayisyen' },
+          { value: 'vi', label: 'Tiếng Việt' },
+          { value: 'ar', label: 'العربية' },
           { value: 'ur', label: 'اردو' },
         ]}
         onChange={set('language')}

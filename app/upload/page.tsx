@@ -71,8 +71,20 @@ function dbToCardLetter(l: DBLetter): ContentLetter {
   };
 }
 
+const LANGUAGE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+  { value: 'pt', label: 'Português' },
+  { value: 'zh', label: '中文' },
+  { value: 'ht', label: 'Kreyòl' },
+  { value: 'vi', label: 'Tiếng Việt' },
+  { value: 'ar', label: 'العربية' },
+  { value: 'ur', label: 'اردو' },
+];
+
 export default function UploadPage() {
-  const [t] = useClaraTweaks();
+  const [t, setTweak] = useClaraTweaks();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
@@ -170,6 +182,36 @@ export default function UploadPage() {
               {lang === 'fr' ? 'changer de profil' : lang === 'ur' ? 'پروفائل بدلیں' : 'switch profile'}
             </Link>
           </p>
+          <div style={{ marginTop: 18, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <span className="h-mono">{lang === 'fr' ? 'Langue' : lang === 'ur' ? 'زبان' : 'Read in'}</span>
+            <select
+              value={lang}
+              onChange={(e) => {
+                const next = e.target.value;
+                try {
+                  const raw = localStorage.getItem('clara-tweaks-v1');
+                  const stored = raw ? JSON.parse(raw) : {};
+                  stored.language = next;
+                  localStorage.setItem('clara-tweaks-v1', JSON.stringify(stored));
+                } catch {}
+                setTweak('language', next);
+              }}
+              style={{
+                appearance: 'none',
+                background: 'var(--bg-elev)',
+                border: '0.5px solid var(--rule-strong)',
+                borderRadius: 8,
+                padding: '8px 14px',
+                font: 'inherit',
+                fontSize: 15,
+                color: 'var(--ink)',
+              }}
+            >
+              {LANGUAGE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
         </section>
 
         {!loading && (
