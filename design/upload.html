@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clara — Upload</title>
+<link rel="stylesheet" href="clara.css" />
+<link rel="stylesheet" href="clara-pages.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="options-panel.jsx"></script>
+<script type="text/babel" src="clara-tweaks.jsx"></script>
+<script type="text/babel" src="clara-content.jsx"></script>
+<script type="text/babel" src="clara-components.jsx"></script>
+<script type="text/babel">
+const LOADING_LINES = {
+  en: [
+    "Clara is reading your letter carefully…",
+    "Looking for the important parts…",
+    "Finding any deadlines…",
+    "Translating into plain words…",
+    "Almost ready.",
+  ],
+  fr: [
+    "Clara lit votre lettre attentivement…",
+    "Repérage des points importants…",
+    "Recherche des échéances…",
+    "Traduction en mots simples…",
+    "Presque prêt.",
+  ],
+  ur: [
+    "کلارا آپ کا خط احتیاط سے پڑھ رہی ہے…",
+    "اہم باتیں ڈھونڈ رہی ہے…",
+    "آخری تاریخیں دیکھ رہی ہے…",
+    "آسان الفاظ میں ترجمہ کر رہی ہے…",
+    "تقریباً تیار۔",
+  ],
+};
+
+function UploadApp() {
+  const [t, setTweak] = useClaraTweaks();
+  const [loading, setLoading] = React.useState(false);
+  const [lineIdx, setLineIdx] = React.useState(0);
+  const [drag, setDrag] = React.useState(false);
+  const lang = t.language;
+  const ui = UI_STRINGS[lang];
+  const greet = CLARA_GREETINGS[lang];
+  const activeProfile = (window.CLARA_PROFILES || []).find(p => p.id === t.activeProfile) || {name: greet.you};
+
+  React.useEffect(() => {
+    if (!loading) return;
+    const id = setInterval(() => setLineIdx(i => i + 1), 1400);
+    const done = setTimeout(() => {
+      window.location.href = `letter.html?id=masshealth-renewal`;
+    }, 6500);
+    return () => { clearInterval(id); clearTimeout(done); };
+  }, [loading]);
+
+  const startProcessing = () => { setLoading(true); setLineIdx(0); };
+
+  const recent = CLARA_LETTERS.slice(0, 3);
+  const lines = LOADING_LINES[lang] || LOADING_LINES.en;
+
+  return (
+    <>
+      <TopNav active="home" lang={lang} />
+      <main className="shell" data-screen-label="02 Upload">
+        <section className="upload-hero fade-up">
+          <h1 className="greeting">{greet.hi}, <em>{activeProfile.name}</em>.</h1>
+          <p className="greeting-sub">{lang === 'fr' ? "Avez-vous reçu quelque chose ?" : lang === 'ur' ? "کیا آج کوئی خط آیا؟" : "Did anything come in the mail today?"} <a href="picker.html" style={{color:'var(--ink-faint)', textDecoration:'none', fontSize:14, marginLeft:8, borderBottom:'1px solid var(--rule)'}}>{lang === 'fr' ? 'changer de profil' : lang === 'ur' ? 'پروفائل بدلیں' : 'switch profile'}</a></p>
+        </section>
+
+        {!loading && (
+          <div className={"dropzone fade-up fade-up-2" + (drag ? " drag" : "")}
+            onDragOver={(e)=>{e.preventDefault(); setDrag(true);}}
+            onDragLeave={()=>setDrag(false)}
+            onDrop={(e)=>{e.preventDefault(); setDrag(false); startProcessing();}}>
+            <div className="dropzone-icon"><Icon name="camera" size={40} stroke={1.4} /></div>
+            <div>
+              <h2>{ui.upload}</h2>
+              <p style={{marginTop:8}}>{ui.uploadHint}</p>
+            </div>
+            <button className="btn btn-primary btn-lg" onClick={startProcessing}>
+              <Icon name="camera" size={18} /> {lang === 'fr' ? 'Prendre une photo' : lang === 'ur' ? 'تصویر لیں' : 'Take a photo'}
+            </button>
+            <span className="or">{lang === 'fr' ? 'ou glissez une image ici' : lang === 'ur' ? 'یا یہاں چھوڑ دیں' : 'or drag an image here'}</span>
+          </div>
+        )}
+
+        {loading && (
+          <div className="loading-state fade-up">
+            {t.loading === 'rotating' && (
+              <>
+                <div className="loading-rotating">
+                  {lines[lineIdx % lines.length]}
+                </div>
+                <div className="loading-line"></div>
+              </>
+            )}
+            {t.loading === 'single' && (
+              <>
+                <div className="loading-rotating" style={{fontSize:28}}>
+                  {lang === 'fr' ? 'Clara lit votre lettre…' : lang === 'ur' ? 'کلارا پڑھ رہی ہے…' : 'Clara is reading…'}
+                </div>
+                <div className="loading-line" style={{marginTop:24}}></div>
+              </>
+            )}
+            {t.loading === 'illus' && (
+              <div className="loading-illus">
+                <div className="pulse-circle">
+                  <Icon name="envelope" size={44} stroke={1.4} />
+                </div>
+                <div className="loading-rotating" style={{minHeight:'auto', fontSize:24}}>
+                  {lines[lineIdx % lines.length]}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!loading && (
+          <section className="recent-section fade-up fade-up-3">
+            <div className="section-head">
+              <h2>{ui.recent}</h2>
+              <a href="profile.html" style={{color:'var(--ink-soft)', textDecoration:'none', fontSize:15}}>
+                {lang === 'fr' ? 'Tout voir' : lang === 'ur' ? 'سب دیکھیں' : 'See all'} →
+              </a>
+            </div>
+            <div className="recent-grid">
+              {recent.map(l => <LetterCard key={l.id} letter={l} lang={lang} variant={t.card} />)}
+            </div>
+          </section>
+        )}
+      </main>
+
+      <ClaraTweaksPanel tweaks={t} setTweak={setTweak} />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<UploadApp />);
+</script>
+</body>
+</html>

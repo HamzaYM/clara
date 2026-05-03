@@ -1,65 +1,82 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ClaraLogo } from '@/components/ClaraLogo';
+import { Icon } from '@/components/Icon';
+import { useClaraTweaks } from '@/lib/tweaks';
+
+export default function SetupPage() {
+  const [, setTweak] = useClaraTweaks();
+  const router = useRouter();
+  const [name, setName] = useState('');
+  const [language, setLanguage] = useState('en');
+  const [email, setEmail] = useState('');
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTweak('language', language);
+    router.push('/upload');
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="setup-page" data-screen-label="01 Setup">
+      <div className="setup-left fade-up">
+        <div className="setup-hero">
+          <ClaraLogo size="lg" />
+          <h1 className="h-display">A patient helper for the letters that matter.</h1>
+          <p>Snap a photo of a confusing letter — government, medical, financial — and Clara explains it in your language, gently, with a calm voice and a draft reply ready to send.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="setup-illus">
+          <div className="paper-stack">
+            <div className="p1"></div>
+            <div className="p2"></div>
+            <div className="p3"></div>
+          </div>
+          <div style={{ paddingBottom: 24, color: 'var(--ink-faint)', fontSize: 15, fontStyle: 'italic', fontFamily: 'var(--font-display)', maxWidth: 240, lineHeight: 1.5 }}>
+            &ldquo;It&rsquo;s the visual equivalent of a kind nurse sitting at the kitchen table.&rdquo;
+          </div>
         </div>
-      </main>
+      </div>
+
+      <div className="setup-right fade-up fade-up-2">
+        <form className="setup-form" onSubmit={onSubmit}>
+          <div className="seal"><span className="seal-dot"></span><span>Let&rsquo;s get acquainted</span></div>
+          <h2>Who are we helping?</h2>
+
+          <div className="field">
+            <label htmlFor="name">Your name</label>
+            <input id="name" type="text" placeholder="Elena Rodriguez" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+
+          <div className="field">
+            <label htmlFor="language">Preferred language</label>
+            <select id="language" value={language} onChange={(e) => setLanguage(e.target.value)}>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="zh">中文 (Mandarin)</option>
+              <option value="pt">Português</option>
+              <option value="ht">Kreyòl ayisyen</option>
+              <option value="vi">Tiếng Việt</option>
+              <option value="ar">العربية</option>
+              <option value="fr">Français</option>
+              <option value="ur">اردو</option>
+            </select>
+            <span className="field-hint">We&rsquo;ll explain every letter and read it aloud in this language.</span>
+          </div>
+
+          <div className="field">
+            <label htmlFor="email">Caregiver email <span style={{ color: 'var(--ink-faint)', fontWeight: 400 }}>— optional</span></label>
+            <input id="email" type="email" placeholder="daughter@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <span className="field-hint">We&rsquo;ll send them a heads up when something important comes in. Nothing else.</span>
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: 8, width: 'fit-content' }}>
+            Get started <Icon name="arrow" size={18} />
+          </button>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--ink-faint)' }}>No password needed. We&rsquo;ll keep things simple.</p>
+        </form>
+      </div>
     </div>
   );
 }
