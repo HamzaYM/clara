@@ -21,6 +21,14 @@ snap a picture of a parent's mail and instantly know whether it needs attention.
 
 ---
 
+
+## Origin
+
+Clara started at an MIT hackathon run by the Claude Builders Club, sponsored by
+Anthropic and Jane Street. The idea came from a simple observation: the people who
+most need help with dense official mail (older adults) are the least served by how
+that mail is written. It was built in a weekend and is being taken further from there.
+
 ## Screens
 
 Clara is a small Next.js app with these screens:
