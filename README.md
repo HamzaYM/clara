@@ -1,6 +1,6 @@
 # Clara
 
-**Clara turns confusing mail into plain language you can actually understand — and listen to.**
+**Clara turns confusing mail into plain language you can actually understand, and listen to.**
 
 Government notices, health-insurance statements, and bank letters are written for
 lawyers and administrators, not for people. That hits older adults hardest: a missed
@@ -13,21 +13,15 @@ Clara takes a photo or PDF of a letter and gives back:
 - the **key facts** (who sent it, amounts, case/claim numbers), and
 - a **read-aloud audio** version, in the reader's language.
 
-It's built for older people and the family members who help them — a caregiver can
+It's built for older people and the family members who help them. A caregiver can
 snap a picture of a parent's mail and instantly know whether it needs attention.
-
-> Clara is a work in progress (it started as a hackathon project). It's useful today,
-> but expect rough edges. Contributions welcome — see [CONTRIBUTING](CONTRIBUTING.md).
-
----
-
 
 ## Origin
 
 Clara started at an MIT hackathon run by the Claude Builders Club, sponsored by
 Anthropic and Jane Street. The idea came from a simple observation: the people who
 most need help with dense official mail (older adults) are the least served by how
-that mail is written. It was built in a weekend and is being taken further from there.
+that mail is written. It was built in under two hours and is being taken further from there.
 
 ## Screens
 
@@ -71,7 +65,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 The local SQLite database (`data/clara.db`) is created automatically the first time
-you run the app — there's nothing to set up.
+you run the app, so there is nothing to set up.
 
 Optional: seed some sample data with `npm run seed`.
 
@@ -79,7 +73,7 @@ Optional: seed some sample data with `npm run seed`.
 
 ## Where each API key goes
 
-All keys live in `.env.local` (which is gitignored — it is never committed). Copy
+All keys live in `.env.local` (which is gitignored, so it is never committed). Copy
 `.env.example` to `.env.local` and fill in your own values:
 
 | Variable | Required? | What it's for | Get it from |
@@ -88,7 +82,7 @@ All keys live in `.env.local` (which is gitignored — it is never committed). C
 | `ELEVENLABS_API_KEY` | Yes, for audio | Read-aloud text-to-speech | https://elevenlabs.io/app/settings/api-keys |
 | `ELEVENLABS_VOICE_ID` | Optional | Override the default voice (needed on free ElevenLabs tiers) | Your ElevenLabs voice library |
 
-- The Anthropic SDK picks up `ANTHROPIC_API_KEY` automatically — no code changes needed.
+- The Anthropic SDK picks up `ANTHROPIC_API_KEY` automatically, so no code changes are needed.
 - If you skip `ELEVENLABS_API_KEY`, letters still process fine; only the audio playback fails.
 
 ---
@@ -107,10 +101,10 @@ managed database such as Postgres. Here's how to move.
 
 Clara's data model (defined in `lib/db.ts`) is:
 
-- `users` — id, name, preferred_language, caregiver_email, created_at
-- `letters` — id, user_id, category, sender, letter_type, language, summary_spoken, urgency, raw_image_data, full_extraction, created_at
-- `deadlines` — id, letter_id, user_id, due_date, what, consequence, reminded_at
-- `government_records` / `health_records` / `financial_records` — category-specific details linked to a letter
+- `users`: id, name, preferred_language, caregiver_email, created_at
+- `letters`: id, user_id, category, sender, letter_type, language, summary_spoken, urgency, raw_image_data, full_extraction, created_at
+- `deadlines`: id, letter_id, user_id, due_date, what, consequence, reminded_at
+- `government_records` / `health_records` / `financial_records`: category-specific details linked to a letter
 
 The equivalent Postgres schema for the core tables looks like:
 
@@ -159,7 +153,7 @@ DATABASE_URL=postgres://user:password@host:5432/clara
 
 ### 3. Wire it up
 
-`lib/db.ts` is the single place that talks to the database — every route imports its
+`lib/db.ts` is the single place that talks to the database. Every route imports its
 helper functions (`createUser`, `createLetter`, `getLetterById`, …) from there. To
 switch databases you only need to reimplement that one file:
 
@@ -178,7 +172,7 @@ switch databases you only need to reimplement that one file:
 - **Tailwind CSS v4**
 - **Claude** via `@anthropic-ai/sdk` for letter understanding
 - **ElevenLabs** for text-to-speech
-- **SQLite** via `better-sqlite3` (swappable — see above)
+- **SQLite** via `better-sqlite3` (swappable, see above)
 - **Playwright** for tests
 
 ## Scripts
@@ -193,4 +187,11 @@ switch databases you only need to reimplement that one file:
 
 ## License
 
-[MIT](LICENSE) — free to use, modify, and share.
+[MIT](LICENSE). Free to use, modify, and share.
+
+## Lots of work to be done
+
+Clara is useful today, but it came out of an under-two-hour hackathon build and it shows.
+It keeps everything in a local SQLite file, so as it stands it runs on one machine, and
+moving it to a real database is a job you have to do yourself (see above). Expect rough
+edges throughout. Contributions welcome, see [CONTRIBUTING](CONTRIBUTING.md).
